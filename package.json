@@ -1,4 +1,4 @@
-{
+  {
   "name": "code-assistant",
   "displayName": "code-assistant",
   "description": "面向特定领域的本地化智能代码助手",
@@ -11,7 +11,26 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
-  "contributes": {
+    "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ai-assistant-container",
+          "title": "AI 本地助手",
+          "icon": "$(hubot)" 
+        }
+      ]
+    },
+    "views": {
+      "ai-assistant-container": [
+        {
+          "type": "webview",
+          "id": "code-assistant-sidebar",
+          "name": "聊天对话",
+          "icon": "$(comment-discussion)"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "code-assistant.showPanel",
