@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 本地代码助手 - 完整体验版</title>
+
     <style>
-        /* === 主题颜色变量 === */
         :root {
             --bg-color: var(--vscode-editor-background, #1e1e1e);
             --text-color: var(--vscode-editor-foreground, #cccccc);
@@ -57,34 +57,36 @@
             --text-muted: #888888;
         }
 
-        /* 基础页面设置 */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex; 
+            display: flex;
             height: 100vh;
-            box-sizing: border-box;
-            background-color: var(--bg-color); 
+            background-color: var(--bg-color);
             color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
         }
-        
-        /* === 左侧边栏 === */
+
         #sidebar {
             width: 260px;
+            min-width: 200px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--sidebar-border);
             display: flex;
             flex-direction: column;
             padding: 15px 10px;
-            box-sizing: border-box;
             transition: background-color 0.3s;
         }
 
         #new-chat-btn {
             padding: 10px;
-            background-color: transparent;
+            background: transparent;
             color: var(--text-color);
             border: 1px solid var(--sidebar-border);
             border-radius: 6px;
@@ -92,10 +94,42 @@
             margin-bottom: 15px;
             font-size: 14px;
             text-align: left;
-            transition: all 0.2s;
         }
 
-        #new-chat-btn:hover { background-color: var(--item-hover); }
+        #new-chat-btn:hover {
+            background-color: var(--item-hover);
+        }
+
+        #upload-doc-btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        #upload-doc-btn:hover {
+            opacity: 0.9;
+        }
+
+        #upload-doc-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #upload-status {
+            min-height: 16px;
+            margin: 0 2px 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
 
         #chat-list {
             list-style: none;
@@ -105,7 +139,6 @@
             flex: 1;
         }
 
-        /* 🌟 改动 1：为支持删除按钮，重写 chat-item 的布局 */
         .chat-item {
             display: flex;
             justify-content: space-between;
@@ -119,22 +152,24 @@
             transition: background-color 0.2s;
         }
 
-        /* 聊天标题容器，溢出时显示省略号 */
         .chat-title {
             flex: 1;
+            min-width: 0;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; 
+            text-overflow: ellipsis;
             margin-right: 5px;
         }
 
-        .chat-item:hover { background-color: var(--item-hover); }
+        .chat-item:hover {
+            background-color: var(--item-hover);
+        }
+
         .chat-item.active {
             background-color: var(--item-active-bg);
             color: var(--item-active-text);
         }
 
-        /* 🌟 新增：删除按钮样式，默认透明，悬浮时显示 */
         .delete-btn {
             background: none;
             border: none;
@@ -143,17 +178,64 @@
             font-size: 14px;
             padding: 2px 4px;
             border-radius: 4px;
-            opacity: 0; 
+            opacity: 0;
             transition: opacity 0.2s, background-color 0.2s;
         }
 
-        .chat-item:hover .delete-btn { opacity: 1; }
-        .delete-btn:hover { background-color: rgba(255, 0, 0, 0.2); }
+        .chat-item:hover .delete-btn,
+        .delete-btn:focus {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+
+        #uploaded-docs-section {
+            border-top: 1px solid var(--sidebar-border);
+            padding-top: 8px;
+            margin-top: 8px;
+            max-height: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #uploaded-docs-title {
+            margin: 0 2px 6px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        #uploaded-docs-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .uploaded-doc-item {
+            padding: 5px 6px;
+            margin-bottom: 3px;
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .uploaded-doc-item:hover {
+            background-color: var(--item-hover);
+        }
+
+        #uploaded-docs-empty {
+            padding: 4px 2px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
 
         #theme-toggle-btn {
             margin-top: 10px;
             padding: 10px;
-            background-color: transparent;
+            background: transparent;
             color: var(--text-muted);
             border: none;
             border-top: 1px solid var(--sidebar-border);
@@ -162,17 +244,20 @@
             font-size: 13px;
             border-radius: 0 0 6px 6px;
         }
-        #theme-toggle-btn:hover { color: var(--text-color); background-color: var(--item-hover); }
 
-        /* === 右侧主聊天区 === */
+        #theme-toggle-btn:hover {
+            color: var(--text-color);
+            background-color: var(--item-hover);
+        }
+
         #main-area {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             padding: 15px;
-            box-sizing: border-box;
         }
-        
+
         #chat-container {
             flex: 1;
             overflow-y: auto;
@@ -186,7 +271,7 @@
             padding: 12px 16px;
             border-radius: 8px;
             line-height: 1.6;
-            word-wrap: break-word;
+            overflow-wrap: anywhere;
             max-width: 80%;
             font-size: 14px;
             white-space: pre-wrap;
@@ -195,7 +280,7 @@
         .user-message {
             background-color: var(--btn-bg);
             color: var(--btn-text);
-            margin-left: auto; 
+            margin-left: auto;
             border-bottom-right-radius: 2px;
         }
 
@@ -203,12 +288,11 @@
             background-color: var(--ai-msg-bg);
             border: 1px solid var(--ai-msg-border);
             color: var(--text-color);
-            margin-right: auto; 
+            margin-right: auto;
             border-bottom-left-radius: 2px;
             transition: background-color 0.3s;
         }
 
-        /* 多行输入框样式 */
         #input-container {
             display: flex;
             gap: 10px;
@@ -218,26 +302,28 @@
 
         #user-input {
             flex: 1;
+            min-width: 0;
             padding: 12px 15px;
             border-radius: 6px;
             border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
             font-size: 14px;
-            font-family: inherit; 
+            font-family: inherit;
             outline: none;
-            resize: none; 
+            resize: none;
             overflow-y: auto;
-            max-height: 150px; 
+            max-height: 150px;
             line-height: 1.5;
-            transition: border-color 0.3s, background-color 0.3s;
         }
 
-        #user-input:focus { border-color: var(--btn-bg); }
+        #user-input:focus {
+            border-color: var(--btn-bg);
+        }
 
         #send-btn {
             padding: 12px 24px;
-            height: 46px; 
+            min-height: 46px;
             background-color: var(--btn-bg);
             color: var(--btn-text);
             border: none;
@@ -245,12 +331,17 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            transition: opacity 0.2s;
         }
 
-        #send-btn:hover { opacity: 0.9; }
+        #send-btn:hover {
+            opacity: 0.9;
+        }
 
-        /* AI 思考中加载动画样式 */
+        #send-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         .typing-indicator {
             display: flex;
             gap: 5px;
@@ -266,85 +357,163 @@
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
         @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
-<body>
 
+<body class="theme-dark">
     <div id="sidebar">
         <button id="new-chat-btn">➕ 新建对话</button>
+
+        <button id="upload-doc-btn">
+            📄 上传 PDF / Markdown
+        </button>
+
+        <div id="upload-status">
+            支持 PDF、MD 文档
+        </div>
+
         <ul id="chat-list"></ul>
-        <button id="theme-toggle-btn">☀️ 切换浅色模式</button>
+
+        <div id="uploaded-docs-section">
+            <div id="uploaded-docs-title">
+                📚 本地知识库文档
+            </div>
+
+            <ul id="uploaded-docs-list"></ul>
+
+            <div id="uploaded-docs-empty">
+                暂未添加文档
+            </div>
+        </div>
+
+        <button id="theme-toggle-btn">
+            ☀️ 切换浅色模式
+        </button>
     </div>
 
     <div id="main-area">
         <div id="chat-container"></div>
+
         <div id="input-container">
-            <textarea id="user-input" rows="1" placeholder="输入问题 (Enter 发送，Shift+Enter 换行)..."></textarea>
+            <textarea
+                id="user-input"
+                rows="1"
+                placeholder="输入问题 (Enter 发送，Shift+Enter 换行)..."
+            ></textarea>
+
             <button id="send-btn">发送</button>
         </div>
     </div>
 
     <script>
-        const LOCAL_STORAGE_KEY = 'ai_assistant_data';
+        // ==========================================
+        // VS Code Webview 通信
+        // ==========================================
+
+        const vscode = typeof acquireVsCodeApi === 'function'
+            ? acquireVsCodeApi()
+            : {
+                postMessage(message) {
+                    console.log('当前不是 VS Code Webview，模拟消息：', message);
+                }
+            };
 
         // ==========================================
-        // 🌟 新增功能 5：本地存储管理
+        // 本地存储
         // ==========================================
+
+        const LOCAL_STORAGE_KEY = 'ai_assistant_data';
+
         function loadData() {
-            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedData) {
-                try {
-                    const parsed = JSON.parse(savedData);
-                    return parsed;
-                } catch (e) {
-                    console.error("读取本地数据失败", e);
+            try {
+                const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+                if (savedData) {
+                    return JSON.parse(savedData);
                 }
+            } catch (error) {
+                console.error('读取本地数据失败：', error);
             }
+
             return null;
         }
 
-        function saveData() {
-            const dataToSave = {
-                theme: currentTheme,
-                chatId: currentChatId,
-                history: chatHistory
-            };
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-        }
+        // ==========================================
+        // 初始化状态
+        // 注意：以下变量只声明一次
+        // ==========================================
 
-        // ==========================================
-        // 初始化数据状态
-        // ==========================================
         let chatHistory = [];
         let currentChatId = null;
-        let currentTheme = 'dark'; 
-        let isWaitingForAI = false; 
+        let currentTheme = 'dark';
+        let isWaitingForAI = false;
+        let uploadedDocuments = [];
 
-        // 尝试加载本地数据
         const initialData = loadData();
-        if (initialData && initialData.history && initialData.history.length > 0) {
-            chatHistory = initialData.history;
-            currentChatId = initialData.chatId || chatHistory[0].id;
-            currentTheme = initialData.theme || 'dark';
-        } else {
-            // 没有本地数据，使用默认数据
-            chatHistory = [{
-                id: Date.now(),
-                title: "默认对话",
-                messages: [
-                    { sender: 'ai', text: "👋 你好！我是你的本地代码助手。<br><br>💡 <b>本次升级新增：</b><br>1. 历史对话现在已经保存到本地啦，刷新页面也不会丢失！<br>2. 鼠标放到左侧列表，试试删除无用的对话。" }
-                ]
-            }];
-            currentChatId = chatHistory[0].id;
+
+        if (initialData) {
+            uploadedDocuments = Array.isArray(initialData.uploadedDocuments)
+                ? initialData.uploadedDocuments
+                : [];
+
+            currentTheme = initialData.theme === 'light'
+                ? 'light'
+                : 'dark';
+
+            if (
+                Array.isArray(initialData.history) &&
+                initialData.history.length > 0
+            ) {
+                chatHistory = initialData.history;
+                currentChatId = initialData.chatId || chatHistory[0].id;
+
+                if (!chatHistory.some(chat => chat.id === currentChatId)) {
+                    currentChatId = chatHistory[0].id;
+                }
+            }
         }
 
+        if (chatHistory.length === 0) {
+            const defaultChat = {
+                id: Date.now(),
+                title: '默认对话',
+                messages: [{
+                    sender: 'ai',
+                    text:
+                        '👋 你好！我是你的本地代码助手。<br><br>' +
+                        '💡 <b>当前功能：</b><br>' +
+                        '1. 支持保存和恢复历史对话。<br>' +
+                        '2. 可以创建、切换和删除对话。<br>' +
+                        '3. 可以上传 PDF / Markdown 文档并加入本地知识库。'
+                }]
+            };
+
+            chatHistory = [defaultChat];
+            currentChatId = defaultChat.id;
+        }
+
+        // ==========================================
         // DOM 元素引用
+        // ==========================================
+
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const chatListEl = document.getElementById('chat-list');
         const chatContainer = document.getElementById('chat-container');
@@ -352,218 +521,337 @@
         const sendBtn = document.getElementById('send-btn');
         const newChatBtn = document.getElementById('new-chat-btn');
 
-        // 应用初始主题
-        if (currentTheme === 'light') {
-            document.body.classList.replace('theme-dark', 'theme-light');
-            themeToggleBtn.textContent = '🌙 切换深色模式';
+        const uploadDocBtn = document.getElementById('upload-doc-btn');
+        const uploadStatus = document.getElementById('upload-status');
+        const uploadedDocsList = document.getElementById('uploaded-docs-list');
+        const uploadedDocsEmpty = document.getElementById('uploaded-docs-empty');
+
+        // ==========================================
+        // 保存数据
+        // ==========================================
+
+        function saveData() {
+            const dataToSave = {
+                theme: currentTheme,
+                chatId: currentChatId,
+                history: chatHistory,
+                uploadedDocuments: uploadedDocuments
+            };
+
+            try {
+                localStorage.setItem(
+                    LOCAL_STORAGE_KEY,
+                    JSON.stringify(dataToSave)
+                );
+            } catch (error) {
+                console.error('保存本地数据失败：', error);
+            }
         }
 
-        // 主题切换逻辑
-        themeToggleBtn.onclick = () => {
-            if (currentTheme === 'dark') {
-                document.body.classList.remove('theme-dark');
-                document.body.classList.add('theme-light');
-                themeToggleBtn.textContent = '🌙 切换深色模式';
-                currentTheme = 'light';
-            } else {
-                document.body.classList.remove('theme-light');
-                document.body.classList.add('theme-dark');
-                themeToggleBtn.textContent = '☀️ 切换浅色模式';
-                currentTheme = 'dark';
-            }
-            saveData(); // 🌟 保存主题状态
-        };
+        // ==========================================
+        // 主题切换
+        // ==========================================
+
+        function applyTheme() {
+            document.body.classList.remove('theme-dark', 'theme-light');
+            document.body.classList.add(`theme-${currentTheme}`);
+
+            themeToggleBtn.textContent = currentTheme === 'dark'
+                ? '☀️ 切换浅色模式'
+                : '🌙 切换深色模式';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            saveData();
+        });
 
         // ==========================================
-        // 界面渲染逻辑
+        // 聊天历史渲染
         // ==========================================
+
         function renderSidebar() {
-            chatListEl.innerHTML = ''; 
+            chatListEl.innerHTML = '';
+
             chatHistory.forEach(chat => {
                 const li = document.createElement('li');
                 li.className = 'chat-item';
-                if (chat.id === currentChatId) li.classList.add('active'); 
-                
-                // 🌟 改动 1：拆分标题和删除按钮
+
+                if (chat.id === currentChatId) {
+                    li.classList.add('active');
+                }
+
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'chat-title';
-                titleSpan.textContent = chat.title;
+                titleSpan.textContent = chat.title || '新对话';
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-btn';
-                deleteBtn.innerHTML = '🗑️';
+                deleteBtn.textContent = '🗑️';
                 deleteBtn.title = '删除对话';
-                
-                // 🌟 新增功能 4：删除事件
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation(); // 阻止事件冒泡，防止触发 li 的点击切换事件
+                deleteBtn.setAttribute('aria-label', '删除对话');
+
+                deleteBtn.addEventListener('click', event => {
+                    event.stopPropagation();
                     deleteChat(chat.id);
-                };
+                });
 
                 li.appendChild(titleSpan);
                 li.appendChild(deleteBtn);
 
-                li.onclick = () => {
+                li.addEventListener('click', () => {
                     currentChatId = chat.id;
-                    saveData(); // 🌟 保存当前选中的对话状态
-                    renderSidebar(); 
-                    renderMessages(); 
-                };
+                    saveData();
+                    renderSidebar();
+                    renderMessages();
+                });
+
                 chatListEl.appendChild(li);
             });
         }
 
-        // 🌟 新增功能 4：处理删除逻辑
         function deleteChat(id) {
-            chatHistory = chatHistory.filter(c => c.id !== id);
+            chatHistory = chatHistory.filter(chat => chat.id !== id);
 
-            // 如果删光了，自动建一个新的空对话
             if (chatHistory.length === 0) {
-                chatHistory = [{
+                const newChat = {
                     id: Date.now(),
-                    title: "新对话",
-                    messages: [{ sender: 'ai', text: "所有的对话都被清空啦。请问有什么可以帮您？" }]
-                }];
-                currentChatId = chatHistory[0].id;
-            } 
-            // 如果删除了当前正在看的对话，自动切换到列表的第一个
-            else if (currentChatId === id) {
+                    title: '新对话',
+                    messages: [{
+                        sender: 'ai',
+                        text: '所有对话都已清空。请问有什么可以帮您？'
+                    }]
+                };
+
+                chatHistory = [newChat];
+                currentChatId = newChat.id;
+            } else if (currentChatId === id) {
                 currentChatId = chatHistory[0].id;
             }
 
-            saveData(); // 🌟 删除后立即保存到本地
+            saveData();
             renderSidebar();
             renderMessages();
         }
 
+        // ==========================================
+        // 消息渲染
+        // ==========================================
+
         function renderMessages() {
-            chatContainer.innerHTML = ''; 
-            const currentChat = chatHistory.find(c => c.id === currentChatId);
-            
+            chatContainer.innerHTML = '';
+
+            const currentChat = chatHistory.find(
+                chat => chat.id === currentChatId
+            );
+
             if (currentChat) {
-                currentChat.messages.forEach(msg => {
+                currentChat.messages.forEach(message => {
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = `message ${msg.sender}-message`;
-                    msgDiv.innerHTML = msg.text;
+
+                    msgDiv.className =
+                        `message ${message.sender === 'user' ? 'user' : 'ai'}-message`;
+
+                    // 保留后端返回的 Markdown/HTML 格式
+                    msgDiv.innerHTML = message.text;
+
                     chatContainer.appendChild(msgDiv);
                 });
-
-                if (isWaitingForAI) {
-                    const typingDiv = document.createElement('div');
-                    typingDiv.className = 'message ai-message';
-                    typingDiv.innerHTML = `
-                        <div class="typing-indicator">
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                        </div>
-                    `;
-                    chatContainer.appendChild(typingDiv);
-                }
             }
+
+            if (isWaitingForAI) {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message ai-message';
+
+                typingDiv.innerHTML = `
+                    <div class="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                `;
+
+                chatContainer.appendChild(typingDiv);
+            }
+
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         function addMessageAndRender(sender, text) {
-            const currentChat = chatHistory.find(c => c.id === currentChatId);
-            if (currentChat) {
-                currentChat.messages.push({ sender, text });
-                // 如果是用户发的首条消息，自动修改标题
-                if (sender === 'user' && currentChat.messages.length === 2) {
-                    currentChat.title = text.substring(0, 12) + (text.length > 12 ? '...' : '');
-                    renderSidebar();
-                }
-                saveData(); // 🌟 有新消息时保存
-                renderMessages();
+            const currentChat = chatHistory.find(
+                chat => chat.id === currentChatId
+            );
+
+            if (!currentChat) {
+                return;
             }
+
+            currentChat.messages.push({
+                sender: sender,
+                text: text
+            });
+
+            if (
+                sender === 'user' &&
+                currentChat.messages.length === 2
+            ) {
+                currentChat.title =
+                    text.substring(0, 12) +
+                    (text.length > 12 ? '...' : '');
+
+                renderSidebar();
+            }
+
+            saveData();
+            renderMessages();
         }
 
-        newChatBtn.onclick = () => {
+        // ==========================================
+        // 新建对话
+        // ==========================================
+
+        newChatBtn.addEventListener('click', () => {
             const newChat = {
                 id: Date.now(),
-                title: "新对话",
-                messages: [{ sender: 'ai', text: "开启了一个新对话，请问有什么可以帮您？" }]
+                title: '新对话',
+                messages: [{
+                    sender: 'ai',
+                    text: '开启了一个新对话，请问有什么可以帮您？'
+                }]
             };
-            chatHistory.unshift(newChat); 
-            currentChatId = newChat.id;   
-            saveData(); // 🌟 新建对话后保存
+
+            chatHistory.unshift(newChat);
+            currentChatId = newChat.id;
+
+            saveData();
             renderSidebar();
             renderMessages();
             userInput.focus();
-        };
-
-        // ==========================================
-        // 输入区与发送逻辑
-        // ==========================================
-        userInput.addEventListener('input', function() {
-            this.style.height = 'auto'; 
-            this.style.height = (this.scrollHeight) + 'px'; 
-            if(this.value === '') this.style.height = 'auto'; 
         });
 
-        userInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); 
-                sendMessage();      
+        // ==========================================
+        // 输入框与发送消息
+        // ==========================================
+
+        userInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        userInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
             }
         });
 
-        let vscode;
-        if (typeof acquireVsCodeApi === 'function') {
-            vscode = acquireVsCodeApi();
-        } else {
-            vscode = {
-                postMessage: function(message) {
-                    if (message.command === 'chat') {
-                        const targetChatId = currentChatId; 
-                        
-                        setTimeout(() => {
-                            const mockReply = "🤖 <b>AI 回复：</b><br>我收到你的消息了！如果你刷新页面，你会发现我们的对话记录依然存在。<br>你说：<br><code>" + message.text + "</code>";
-                            const targetChat = chatHistory.find(c => c.id === targetChatId);
-                            if (targetChat) {
-                                isWaitingForAI = false; 
-                                targetChat.messages.push({ sender: 'ai', text: mockReply });
-                                saveData(); // 🌟 收到 AI 回复后保存
-                                if (currentChatId === targetChatId) {
-                                    renderMessages();
-                                }
-                            }
-                        }, 1200); 
-                    }
-                }
-            };
-        }
-
         function sendMessage() {
             const text = userInput.value.trim();
-            if (!text || isWaitingForAI) return; 
+
+            if (!text || isWaitingForAI) {
+                return;
+            }
 
             addMessageAndRender('user', text);
-            
+
             userInput.value = '';
             userInput.style.height = 'auto';
-            userInput.focus();
 
             isWaitingForAI = true;
+            sendBtn.disabled = true;
             renderMessages();
 
-            vscode.postMessage({ command: 'chat', text: text });
+            vscode.postMessage({
+                command: 'chat',
+                text: text
+            });
         }
 
         sendBtn.addEventListener('click', sendMessage);
 
+        // ==========================================
+        // 接收后端消息
+        // ==========================================
+
         window.addEventListener('message', event => {
             const message = event.data;
-            if (message && message.command === 'receiveMessage') {
-                isWaitingForAI = false; 
-                addMessageAndRender('ai', message.text); 
-                saveData(); // 🌟 收到真实数据后保存
+
+            if (!message) {
+                return;
+            }
+
+            if (message.command === 'receiveMessage') {
+                isWaitingForAI = false;
+                sendBtn.disabled = false;
+
+                addMessageAndRender(
+                    'ai',
+                    message.text || '后端没有返回有效内容。'
+                );
+            }
+
+            if (message.command === 'uploadStatus') {
+                uploadStatus.textContent = message.text || '';
+
+                uploadDocBtn.disabled =
+                    message.status === 'uploading';
+
+                if (
+                    message.status === 'success' &&
+                    message.fileName
+                ) {
+                    if (!uploadedDocuments.includes(message.fileName)) {
+                        uploadedDocuments.push(message.fileName);
+                    }
+
+                    saveData();
+                    renderUploadedDocuments();
+                }
             }
         });
 
-        // 初始化渲染
+        // ==========================================
+        // 文档列表渲染
+        // ==========================================
+
+        function renderUploadedDocuments() {
+            uploadedDocsList.innerHTML = '';
+
+            uploadedDocsEmpty.style.display =
+                uploadedDocuments.length > 0 ? 'none' : 'block';
+
+            uploadedDocuments.forEach(fileName => {
+                const li = document.createElement('li');
+                li.className = 'uploaded-doc-item';
+                li.textContent = '📄 ' + fileName;
+
+                uploadedDocsList.appendChild(li);
+            });
+        }
+
+        // ==========================================
+        // 上传 PDF / Markdown 文档
+        // ==========================================
+
+        uploadDocBtn.addEventListener('click', () => {
+            uploadStatus.textContent = '正在打开文件选择窗口……';
+            uploadDocBtn.disabled = true;
+
+            vscode.postMessage({
+                command: 'uploadDocument'
+            });
+        });
+
+        // ==========================================
+        // 初始化界面
+        // ==========================================
+
+        applyTheme();
         renderSidebar();
         renderMessages();
+        renderUploadedDocuments();
+        saveData();
     </script>
 </body>
 </html>

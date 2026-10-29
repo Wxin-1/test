@@ -3,3 +3,21 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+
+# Python virtual environments
+.venv/
+venv/
+**/.venv/
+**/venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables and API keys
+.env
+.env.*
+!.env.example
+
+# Local model and knowledge-base data
+.DS_Store
